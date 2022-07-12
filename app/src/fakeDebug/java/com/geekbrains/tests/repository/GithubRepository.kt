@@ -4,7 +4,7 @@ import com.geekbrains.tests.model.SearchResponse
 import com.geekbrains.tests.presenter.RepositoryContract
 import retrofit2.Response
 
-internal class FakeGitHubRepository : RepositoryContract {
+internal class GithubRepository : RepositoryContract {
 
     override fun searchGithub(
         query: String,

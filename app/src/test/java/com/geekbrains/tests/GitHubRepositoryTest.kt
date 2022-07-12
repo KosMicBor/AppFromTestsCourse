@@ -1,6 +1,7 @@
 package com.geekbrains.tests
 
 import com.geekbrains.tests.model.SearchResponse
+import com.geekbrains.tests.presenter.RepositoryContract
 import com.geekbrains.tests.repository.GitHubApi
 import com.geekbrains.tests.repository.GitHubRepository
 import com.geekbrains.tests.repository.RepositoryCallback
@@ -17,7 +18,7 @@ import retrofit2.Response
 
 class GitHubRepositoryTest {
 
-    private lateinit var repository: GitHubRepository
+    private lateinit var repository: RepositoryContract
 
     @Mock
     private lateinit var gitHubApi: GitHubApi
