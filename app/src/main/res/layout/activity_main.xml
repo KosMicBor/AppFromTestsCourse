@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_container"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -32,8 +33,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin"
-        app:layout_constraintTop_toBottomOf="@id/searchEditText"
-        android:text="@string/to_details" />
+        android:text="@string/to_details"
+        app:layout_constraintTop_toBottomOf="@id/searchEditText" />
+
+    <TextView
+        android:id="@+id/totalCountTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/results_count"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toDetailsActivityButton"
+        tools:text="Number of results: 100" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -41,5 +54,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/toDetailsActivityButton" />
+        app:layout_constraintTop_toBottomOf="@id/totalCountTextView" />
 </androidx.constraintlayout.widget.ConstraintLayout>
