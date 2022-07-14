@@ -14,8 +14,6 @@ import com.geekbrains.tests.presenter.search.SearchPresenter
 import com.geekbrains.tests.repository.GithubRepository
 import com.geekbrains.tests.view.details.DetailsActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 class MainActivity : AppCompatActivity(), ViewSearchContract {
@@ -44,8 +42,12 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
         toDetailsActivityButton.setOnClickListener {
             startActivity(DetailsActivity.getIntent(this, totalCount))
         }
-        setQueryListener()
+        setEditTextQueryListener()
         setRecyclerView()
+
+        searchButton.setOnClickListener {
+            setSearchButtonQueryListener()
+        }
     }
 
     private fun setRecyclerView() {
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
         recyclerView.adapter = adapter
     }
 
-    private fun setQueryListener() {
+    private fun setEditTextQueryListener() {
         searchEditText.setOnEditorActionListener(OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = searchEditText.text.toString()
@@ -61,11 +63,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
                     presenter.searchGitHub(query)
                     return@OnEditorActionListener true
                 } else {
-                    Toast.makeText(
-                        this@MainActivity,
-                        getString(R.string.enter_search_word),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    displayError(getString(R.string.enter_search_word))
                     return@OnEditorActionListener false
                 }
             }
@@ -92,11 +90,21 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
     }
 
     override fun displayError() {
-        Toast.makeText(this, getString(R.string.undefined_error), Toast.LENGTH_SHORT).show()
+
+        with(totalCountTextView) {
+            visibility = View.VISIBLE
+            text = getString(R.string.enter_search_word)
+
+        }
     }
 
     override fun displayError(error: String) {
-        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+
+        with(totalCountTextView) {
+            visibility = View.VISIBLE
+            text = error
+
+        }
     }
 
     override fun displayLoading(show: Boolean) {
@@ -104,6 +112,15 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
             progressBar.visibility = View.VISIBLE
         } else {
             progressBar.visibility = View.GONE
+        }
+    }
+
+    private fun setSearchButtonQueryListener() {
+        val query = searchEditText.text.toString()
+        if (query.isNotBlank()) {
+            presenter.searchGitHub(query)
+        } else {
+            displayError(getString(R.string.enter_search_word))
         }
     }
 }
