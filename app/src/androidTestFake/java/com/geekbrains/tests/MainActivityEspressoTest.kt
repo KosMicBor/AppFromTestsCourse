@@ -42,7 +42,7 @@ class MainActivityEspressoTest {
         onView(withId(R.id.searchEditText)).perform(replaceText("algol"), closeSoftKeyboard())
         onView(withId(R.id.searchEditText)).perform(pressImeActionButton())
 
-        onView(withId(R.id.totalCountTextView)).check(matches(withText("Number of results: 42")))
+        onView(withId(R.id.totalCountTextView)).check(matches(withText(FAKE_COUNT_STRING)))
     }
 
     @Test
@@ -78,7 +78,7 @@ class MainActivityEspressoTest {
             override fun getConstraints(): Matcher<View> = isRoot()
             override fun getDescription(): String = "wait for $2 seconds"
             override fun perform(uiController: UiController, v: View?) {
-                uiController.loopMainThreadForAtLeast(2000)
+                uiController.loopMainThreadForAtLeast(TIMEOUT)
             }
         }
     }

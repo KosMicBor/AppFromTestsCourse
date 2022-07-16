@@ -55,7 +55,7 @@ class DetailsActivityTest {
     fun activityTextView_HasText() {
         scenario.onActivity {
             val totalCountTextView = it.findViewById<TextView>(R.id.totalCountTextView)
-            assertEquals("Number of results: 0", totalCountTextView.text)
+            assertEquals(ZERO_COUNT_STRING, totalCountTextView.text)
         }
     }
 
@@ -85,7 +85,7 @@ class DetailsActivityTest {
             val totalCountTextView = it.findViewById<TextView>(R.id.totalCountTextView)
             incrementButton.performClick()
 
-            assertEquals("Number of results: 1", totalCountTextView.text)
+            assertEquals(ONE_COUNT_STRING, totalCountTextView.text)
         }
     }
 
@@ -96,29 +96,29 @@ class DetailsActivityTest {
             val totalCountTextView = it.findViewById<TextView>(R.id.totalCountTextView)
             decrementButton.performClick()
 
-            assertEquals("Number of results: -1", totalCountTextView.text)
+            assertEquals(MINUS_ONE_COUNT_STRING, totalCountTextView.text)
         }
     }
 
     @Test
     fun activityCreateIntent_NotNull() {
-        val intent = DetailsActivity.getIntent(context, 0)
+        val intent = DetailsActivity.getIntent(context, ZERO_VAL)
         assertNotNull(intent)
     }
 
     @Test
     fun activityCreateIntent_HasExtras() {
-        val intent = DetailsActivity.getIntent(context, 0)
+        val intent = DetailsActivity.getIntent(context, ZERO_VAL)
         val bundle = intent.extras
         assertNotNull(bundle)
     }
 
     @Test
     fun activityCreateIntent_HasCount() {
-        val count = 42
+        val count = FAKE_COUNT_NUMBER
         val intent = DetailsActivity.getIntent(context, count)
         val bundle = intent.extras
-        assertEquals(count, bundle?.getInt(DetailsActivity.TOTAL_COUNT_EXTRA, 0))
+        assertEquals(count, bundle?.getInt(DetailsActivity.TOTAL_COUNT_EXTRA, ZERO_VAL))
     }
 
     @After

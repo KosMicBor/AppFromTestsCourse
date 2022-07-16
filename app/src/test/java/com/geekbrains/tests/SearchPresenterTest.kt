@@ -109,7 +109,7 @@ class SearchPresenterTest {
         //Запускаем код, функционал которого хотим протестировать
         presenter.searchGitHub("some query")
         //Убеждаемся, что все работает как надо
-        verify(repository, times(1)).searchGithub(searchQuery, presenter)
+        verify(repository, times(ONE_VAL)).searchGithub(searchQuery, presenter)
     }
 
     @Test //Проверяем работу метода handleGitHubError()
@@ -117,7 +117,7 @@ class SearchPresenterTest {
         //Вызываем у Презентера метод handleGitHubError()
         presenter.handleGitHubError()
         //Проверяем, что у viewContract вызывается метод displayError()
-        verify(viewContract, times(1)).displayError()
+        verify(viewContract, times(ONE_VAL)).displayError()
     }
 
     //Проверяем работу метода handleGitHubResponse
@@ -144,7 +144,7 @@ class SearchPresenterTest {
         presenter.handleGitHubResponse(response)
 
         //Убеждаемся, что вызывается верный метод: viewContract.displayError("Response is null or unsuccessful"), и что он вызывается единожды
-        verify(viewContract, times(1))
+        verify(viewContract, times(ONE_VAL))
             .displayError("Response is null or unsuccessful")
     }
 
@@ -193,7 +193,7 @@ class SearchPresenterTest {
         presenter.handleGitHubResponse(response)
 
         //Убеждаемся, что вызывается верный метод: viewContract.displayError("Search results or total count are null"), и что он вызывается единожды
-        verify(viewContract, times(1))
+        verify(viewContract, times(ONE_VAL))
             .displayError("Search results or total count are null")
     }
 
@@ -217,6 +217,6 @@ class SearchPresenterTest {
         presenter.handleGitHubResponse(response)
 
         //Убеждаемся, что ответ от сервера обрабатывается корректно
-        verify(viewContract, times(1)).displaySearchResults(searchResults, 101)
+        verify(viewContract, times(ONE_VAL)).displaySearchResults(searchResults, 101)
     }
 }

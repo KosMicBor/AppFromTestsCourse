@@ -43,7 +43,7 @@ class DetailsPresenterTest {
     fun onAttach_Test() {
         scenario.onActivity {
             presenter.onIncrement()
-            assertEquals("Number of results: 1", textView.text)
+            assertEquals(ONE_COUNT_STRING, textView.text)
         }
     }
 
@@ -56,7 +56,7 @@ class DetailsPresenterTest {
 
             presenter.onIncrement()
 
-            assertNotEquals("Number of results: 1", textView.text.toString())
+            assertNotEquals(ONE_COUNT_STRING, textView.text.toString())
         }
     }
 
@@ -80,7 +80,7 @@ class DetailsPresenterTest {
 
             val textView = it.findViewById<TextView>(R.id.totalCountTextView)
 
-            assertEquals("Number of results: 1", textView.text.toString())
+            assertEquals(ONE_COUNT_STRING, textView.text.toString())
         }
     }
 
@@ -92,7 +92,7 @@ class DetailsPresenterTest {
 
             val textView = it.findViewById<TextView>(R.id.totalCountTextView)
 
-            assertEquals("Number of results: -1", textView.text.toString())
+            assertEquals(MINUS_ONE_COUNT_STRING, textView.text.toString())
         }
     }
 

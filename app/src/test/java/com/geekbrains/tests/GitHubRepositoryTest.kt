@@ -82,8 +82,8 @@ class GitHubRepositoryTest {
         `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(call)
         repository.searchGithub(searchQuery, gitHubRepositoryCallBack)
 
-        verify(gitHubRepositoryCallBack, times(1)).handleGitHubResponse(response)
-        verify(gitHubRepositoryCallBack, times(1)).handleGitHubError()
+        verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubResponse(response)
+        verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubError()
     }
 
     @Test
@@ -104,6 +104,6 @@ class GitHubRepositoryTest {
 
         repository.searchGithub(searchQuery, gitHubRepositoryCallBack)
 
-        verify(gitHubRepositoryCallBack, times(1)).handleGitHubResponse(response)
+        verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubResponse(response)
     }
 }
