@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView.OnEditorActionListener
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.geekbrains.tests.R
 import com.geekbrains.tests.model.SearchResult
@@ -45,8 +44,12 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
         toDetailsActivityButton.setOnClickListener {
             startActivity(DetailsActivity.getIntent(this, totalCount))
         }
-        setQueryListener()
+        setEditTextQueryListener()
         setRecyclerView()
+
+        searchButton.setOnClickListener {
+            setSearchButtonQueryListener()
+        }
     }
 
     private fun setRecyclerView() {
@@ -54,7 +57,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
         recyclerView.adapter = adapter
     }
 
-    private fun setQueryListener() {
+    private fun setEditTextQueryListener() {
         searchEditText.setOnEditorActionListener(OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = searchEditText.text.toString()
@@ -62,11 +65,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
                     presenter.searchGitHub(query)
                     return@OnEditorActionListener true
                 } else {
-                    Toast.makeText(
-                        this@MainActivity,
-                        getString(R.string.enter_search_word),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    displayError(getString(R.string.enter_search_word))
                     return@OnEditorActionListener false
                 }
             }
@@ -100,11 +99,21 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
     }
 
     override fun displayError() {
-        Toast.makeText(this, getString(R.string.undefined_error), Toast.LENGTH_SHORT).show()
+
+        with(totalCountTextView) {
+            visibility = View.VISIBLE
+            text = getString(R.string.undefined_error)
+
+        }
     }
 
     override fun displayError(error: String) {
-        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+
+        with(totalCountTextView) {
+            visibility = View.VISIBLE
+            text = error
+
+        }
     }
 
     override fun displayLoading(show: Boolean) {
@@ -115,8 +124,16 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
         }
     }
 
+    private fun setSearchButtonQueryListener() {
+        val query = searchEditText.text.toString()
+        if (query.isNotBlank()) {
+            presenter.searchGitHub(query)
+        } else {
+            displayError(getString(R.string.enter_search_word))
+        }
+    }
+
     companion object {
         const val BASE_URL = "https://api.github.com"
-        const val FAKE = "FAKE"
     }
 }
