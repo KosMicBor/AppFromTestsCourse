@@ -11,13 +11,16 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geekbrains.tests.utils.EspressoTestCustomAction
 import com.geekbrains.tests.view.details.DetailsActivity
 import com.geekbrains.tests.view.search.MainActivity
+import com.geekbrains.tests.view.search.SearchResultAdapter
 import junit.framework.TestCase
 import org.hamcrest.Matcher
 import org.junit.After
@@ -101,6 +104,70 @@ class MainActivityEspressoTest {
 
         intended(hasComponent(ComponentName(context, DetailsActivity::class.java)))
     }
+
+    @Test
+    fun recyclerViewTest_ScrollToItem() {
+        onView(withId(R.id.searchEditText)).perform(click())
+        onView(withId(R.id.searchEditText)).perform(replaceText("uiautomator"), closeSoftKeyboard())
+        onView(withId(R.id.searchButton)).perform(click())
+
+        onView(isRoot()).perform(delay())
+
+        onView(withId(R.id.recyclerView))
+            .perform(
+                RecyclerViewActions.scrollToPosition<SearchResultAdapter.SearchResultViewHolder>(
+                    1
+                )
+            ).check(matches(hasDescendant(withText("xiaocong/uiautomator"))))
+
+        onView(withId(R.id.recyclerView))
+            .perform(
+                RecyclerViewActions.scrollToPosition<SearchResultAdapter.SearchResultViewHolder>(
+                    20
+                )
+            )
+        onView(isRoot()).perform(delay())
+
+        onView(withId(R.id.recyclerView))
+            .perform(
+                RecyclerViewActions.scrollTo<SearchResultAdapter.SearchResultViewHolder>(
+                    hasDescendant(
+                        withText("xiaocong/uiautomator")
+                    )
+                )
+            )
+    }
+
+    @Test
+    fun activitySearch_PerformClickOnItem() {
+
+        onView(withId(R.id.searchEditText)).perform(click())
+        onView(withId(R.id.searchEditText)).perform(
+            replaceText("uiautomator"),
+            closeSoftKeyboard()
+        )
+        onView(withId(R.id.searchButton)).perform(click())
+
+        onView(isRoot()).perform(delay())
+
+        onView(withId(R.id.recyclerView))
+            .perform(
+                RecyclerViewActions.scrollTo<SearchResultAdapter.SearchResultViewHolder>(
+                    hasDescendant(withText("kkevsekk1/AutoX"))
+                )
+            )
+
+        onView(withId(R.id.recyclerView))
+            .perform(
+                RecyclerViewActions.actionOnItem<SearchResultAdapter.SearchResultViewHolder>(
+                    hasDescendant(withText("fmca/uiautomator")),
+                    EspressoTestCustomAction(R.id.listItemCheckbox)
+                )
+            )
+
+        onView(isRoot()).perform(delay())
+    }
+
 
     @After
     fun close() {

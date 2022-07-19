@@ -25,7 +25,6 @@ class DetailsFragment : Fragment(R.layout.fragment_test_layout), ViewDetailsCont
 
             return fragment
         }
-
     }
 
     override fun onResume() {
