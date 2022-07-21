@@ -5,6 +5,7 @@ import com.geekbrains.tests.presenter.RepositoryContract
 import com.geekbrains.tests.repository.GitHubApi
 import com.geekbrains.tests.repository.GitHubRepository
 import com.geekbrains.tests.repository.RepositoryCallback
+import io.reactivex.Observable
 import okhttp3.Request
 import okio.Timeout
 import org.junit.Before
@@ -32,10 +33,16 @@ class GitHubRepositoryTest {
     @Test
     fun searchGithub_Test() {
         val searchQuery = "some query"
-        val call = mock(Call::class.java) as Call<SearchResponse?>
 
-        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(call)
-        repository.searchGithub(searchQuery, mock(RepositoryCallback::class.java))
+        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(
+            Observable.just(
+                SearchResponse(
+                    1,
+                    listOf()
+                )
+            )
+        )
+        repository.searchGithub(searchQuery)
         verify(gitHubApi, times(1)).searchGithub(searchQuery)
     }
 
@@ -79,8 +86,15 @@ class GitHubRepositoryTest {
             }
         }
 
-        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(call)
-        repository.searchGithub(searchQuery, gitHubRepositoryCallBack)
+        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(
+            Observable.just(
+                SearchResponse(
+                    1,
+                    listOf()
+                )
+            )
+        )
+        repository.searchGithub(searchQuery)
 
         verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubResponse(response)
         verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubError()
@@ -94,7 +108,14 @@ class GitHubRepositoryTest {
         val gitHubRepositoryCallBack = mock(RepositoryCallback::class.java)
         val response = mock(Response::class.java) as Response<SearchResponse?>
 
-        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(call)
+        `when`(gitHubApi.searchGithub(searchQuery)).thenReturn(
+            Observable.just(
+                SearchResponse(
+                    1,
+                    listOf()
+                )
+            )
+        )
         `when`(call.enqueue(callBack)).then {
             callBack.onResponse(any(), any())
         }
@@ -102,7 +123,7 @@ class GitHubRepositoryTest {
             gitHubRepositoryCallBack.handleGitHubResponse(response)
         }
 
-        repository.searchGithub(searchQuery, gitHubRepositoryCallBack)
+        repository.searchGithub(searchQuery)
 
         verify(gitHubRepositoryCallBack, times(ONE_VAL)).handleGitHubResponse(response)
     }
