@@ -6,40 +6,44 @@ import androidx.lifecycle.Observer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geekbrains.tests.model.SearchResponse
 import com.geekbrains.tests.repository.GitHubRepository
-import com.geekbrains.tests.utils.MainSchedulersProviderStub
 import com.geekbrains.tests.viewmodels.*
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.subjects.PublishSubject
-import org.junit.Assert
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
+@ExperimentalCoroutinesApi
 class SearchScreenViewModelTest {
 
     companion object {
         private const val SEARCH_QUERY = "query"
-        private const val ERROR_TEXT = "error"
         private const val ERROR_TEXT_NULL = "Search results or total count are null"
+        private const val EXCEPTION_TEXT = "Response is null or unsuccessful"
+
     }
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var testCoroutineRule = CoroutinesTestRule()
+
     private lateinit var viewModel: SearchScreenViewModel
 
     @Mock
     private lateinit var repository: GitHubRepository
+
+
+    private val coroutineDispatcher = TestCoroutineDispatcher()
 
     @Before
     fun setUp() {
@@ -48,140 +52,123 @@ class SearchScreenViewModelTest {
 
         viewModel = SearchScreenViewModel(
             repository,
-            MainSchedulersProviderStub()
+            coroutineDispatcher
         )
     }
 
     @Test
     fun searchScreenViewModel_SearchGitHub_Test() {
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-            Observable.just(
-                SearchResponse(
-                    1,
-                    listOf()
-                )
-            )
-        )
-        viewModel.searchGitHub(SEARCH_QUERY)
-        verify(repository, times(1)).searchGithub(SEARCH_QUERY)
+
+        testCoroutineRule.runBlockingTest {
+            viewModel.searchGitHub(SEARCH_QUERY)
+            verify(repository, times(1)).searchGithub(SEARCH_QUERY)
+        }
     }
 
     @Test
     fun searchScreenViewModel_SearchGitHub_ResponseNotNull_Test() {
-        val observer = Observer<AppState> {}
-        val liveData = viewModel.subscribeLiveData()
 
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-            Observable.just(
-                SearchResponse(
-                    1,
-                    listOf()
-                )
-            )
-        )
+        testCoroutineRule.runBlockingTest {
+            val observer = Observer<AppState> {}
+            val liveData = viewModel.subscribeLiveData()
 
-        try {
-            liveData.observeForever(observer)
-            viewModel.searchGitHub(SEARCH_QUERY)
-            Assert.assertNotNull(liveData.value)
-        } finally {
-            liveData.removeObserver(observer)
+            try {
+                liveData.observeForever(observer)
+                viewModel.searchGitHub(SEARCH_QUERY)
+                assertNotNull(liveData.value)
+            } finally {
+                liveData.removeObserver(observer)
+            }
         }
+
     }
 
-
     @Test
-    fun searchScreenViewModel_LiveData_ReturnValueIsError_Test() {
-        val observer = Observer<AppState> {}
-        val liveData = viewModel.subscribeLiveData()
-        val error = Throwable(ERROR_TEXT)
+    fun searchScreenViewModel_Exception_Test() {
 
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-            Observable.error(error)
-        )
+        testCoroutineRule.runBlockingTest {
+            val observer = Observer<AppState> {}
+            val liveData = viewModel.subscribeLiveData()
 
-        try {
-            liveData.observeForever(observer)
-            viewModel.searchGitHub(SEARCH_QUERY)
-            val value: ErrorState = liveData.value as ErrorState
-            Assert.assertEquals(value.error.message, error.message)
-        } finally {
-            liveData.removeObserver(observer)
+            try {
+                liveData.observeForever(observer)
+                viewModel.searchGitHub(SEARCH_QUERY)
+                val value: ErrorState = liveData.value as ErrorState
+                assertEquals(value.error.message, EXCEPTION_TEXT)
+            } finally {
+                liveData.removeObserver(observer)
+            }
         }
     }
 
     @Test
     fun searchScreenViewModel_LiveData_ReturnValueIsNull_Test() {
-        val observer = Observer<AppState> {}
-        val liveData = viewModel.subscribeLiveData()
-        val error = Throwable(ERROR_TEXT_NULL)
 
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-            Observable.just(
-                SearchResponse(
-                    null,
-                    null
-                )
+        testCoroutineRule.runBlockingTest {
+            val observer = Observer<AppState> {}
+            val liveData = viewModel.subscribeLiveData()
+
+            `when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
+                SearchResponse(null, listOf())
             )
-        )
 
-        try {
-            liveData.observeForever(observer)
-            viewModel.searchGitHub(SEARCH_QUERY)
-            val value: ErrorState = liveData.value as ErrorState
-            Assert.assertEquals(value.error.message, error.message)
-        } finally {
-            liveData.removeObserver(observer)
+            try {
+                liveData.observeForever(observer)
+                viewModel.searchGitHub(SEARCH_QUERY)
+                val value: ErrorState = liveData.value as ErrorState
+                assertEquals(value.error.message, ERROR_TEXT_NULL)
+            } finally {
+                liveData.removeObserver(observer)
+            }
         }
     }
 
     @Test
     fun searchScreenViewModel_LiveData_ReturnValueIsLoading_Test() {
-        val observer = Observer<AppState> {}
-        val liveData = viewModel.subscribeLiveData()
-        val delay = PublishSubject.create<Boolean>()
 
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-           Observable.just(
-               SearchResponse(
-                   1,
-                   listOf()
-               )
-           ).delaySubscription(delay)
-        )
+        testCoroutineRule.runBlockingTest {
+            val observer = Observer<AppState> {}
+            val liveData = viewModel.subscribeLiveData()
 
-        try {
-            liveData.observeForever(observer)
-            viewModel.searchGitHub(SEARCH_QUERY)
-            val loadingResponse = liveData.value as LoadingState
-            Assert.assertNull(loadingResponse.percent)
-        } finally {
-            liveData.removeObserver(observer)
+
+
+            `when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
+                SearchResponse(10, listOf())
+            )
+
+            coroutineDispatcher.pauseDispatcher()
+
+            try {
+                liveData.observeForever(observer)
+                viewModel.searchGitHub(SEARCH_QUERY)
+                val loadingResponse = liveData.value as LoadingState
+                assertNull(loadingResponse.percent)
+            } finally {
+                liveData.removeObserver(observer)
+            }
         }
     }
 
     @Test
     fun searchScreenViewModel_LiveData_ReturnValueIsSuccess_Test() {
-        val observer = Observer<AppState> {}
-        val liveData = viewModel.subscribeLiveData()
 
-        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
-            Observable.just(
-                SearchResponse(
-                    10,
-                    listOf()
-                )
+        testCoroutineRule.runBlockingTest {
+            val observer = Observer<AppState> {}
+            val liveData = viewModel.subscribeLiveData()
+
+            `when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
+                SearchResponse(10, listOf())
             )
-        )
 
-        try {
-            liveData.observeForever(observer)
-            viewModel.searchGitHub(SEARCH_QUERY)
-            val response: SuccessState<SearchResponse> =
-                liveData.value as SuccessState<SearchResponse>
-            Assert.assertEquals(10, response.value.totalCount)
-        } finally {
-            liveData.removeObserver(observer)
+            try {
+                liveData.observeForever(observer)
+                viewModel.searchGitHub(SEARCH_QUERY)
+                val response: SuccessState<SearchResponse> =
+                    liveData.value as SuccessState<SearchResponse>
+                assertEquals(10, response.value.totalCount)
+            } finally {
+                liveData.removeObserver(observer)
+            }
         }
     }
 }

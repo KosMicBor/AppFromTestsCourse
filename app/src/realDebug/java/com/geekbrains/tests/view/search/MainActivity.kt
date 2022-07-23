@@ -16,6 +16,7 @@ import com.geekbrains.tests.utils.MainSchedulersProvider
 import com.geekbrains.tests.view.details.DetailsActivity
 import com.geekbrains.tests.viewmodels.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
     private val adapter = SearchResultAdapter()
     private val factory = SearchScreenViewModelFactory(
         createRepository(),
-        MainSchedulersProvider()
+        Dispatchers.IO
     )
 
     private lateinit var viewModel: SearchScreenViewModel
@@ -111,7 +112,6 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
     private fun createRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

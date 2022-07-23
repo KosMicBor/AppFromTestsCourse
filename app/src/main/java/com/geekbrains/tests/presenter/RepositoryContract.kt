@@ -5,7 +5,7 @@ import io.reactivex.Observable
 
 
 internal interface RepositoryContract {
-    fun searchGithub(
+    suspend fun searchGithub(
         query: String
-    ): Observable<SearchResponse>
+    ): SearchResponse
 }

@@ -4,60 +4,57 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.geekbrains.tests.model.SchedulersProvider
-import com.geekbrains.tests.model.SearchResponse
 import com.geekbrains.tests.presenter.RepositoryContract
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
+import kotlinx.coroutines.*
 
 class SearchScreenViewModel internal constructor(
     private val repository: RepositoryContract,
-    private val schedulersProvider: SchedulersProvider
+    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
-    val compositeDisposable = CompositeDisposable()
+    private val viewModelCoroutineScope = CoroutineScope(
+        dispatcher
+                + SupervisorJob()
+                + CoroutineExceptionHandler { _, throwable ->
+            handleError(throwable)
+        })
+
     private val _liveDataToObserve: MutableLiveData<AppState> = MutableLiveData()
 
     fun subscribeLiveData(): LiveData<AppState> = _liveDataToObserve
 
     fun searchGitHub(query: String) {
-        compositeDisposable.add(
-            repository.searchGithub(query)
-                .subscribeOn(schedulersProvider.io())
-                .observeOn(schedulersProvider.ui())
-                .doOnSubscribe { _liveDataToObserve.postValue(LoadingState(null)) }
-                .subscribeWith(object : DisposableObserver<SearchResponse>() {
-                    override fun onNext(searchResponse: SearchResponse) {
-                        val searchResults = searchResponse.searchResults
-                        val totalCount = searchResponse.totalCount
-                        if (searchResults != null && totalCount != null) {
-                            _liveDataToObserve.postValue(SuccessState(searchResponse))
-                        } else {
-                            _liveDataToObserve.postValue(
-                                ErrorState(Throwable("Search results or total count are null"))
-                            )
-                        }
-                    }
+        _liveDataToObserve.postValue(LoadingState(null))
 
-                    override fun onError(e: Throwable) {
-                        _liveDataToObserve.postValue(
-                            ErrorState(
-                                Throwable(
-                                    e.message ?: "Response is null or unsuccessful"
-                                )
-                            )
-                        )
-                    }
+        viewModelCoroutineScope.launch {
+            val response = repository.searchGithub(query)
+            val result = response.searchResults
+            val totalCount = response.totalCount
 
-                    override fun onComplete() {
-                        //NOTHING TO DO
-                    }
-                })
+            if (result != null && totalCount != null) {
+                _liveDataToObserve.postValue(SuccessState(response))
+            } else {
+                _liveDataToObserve.postValue(
+                    ErrorState(Throwable("Search results or total count are null"))
+                )
+            }
+        }
+    }
+
+
+    private fun handleError(error: Throwable) {
+        _liveDataToObserve.postValue(
+            ErrorState(
+                Throwable(
+                    error.message ?: "Response is null or unsuccessful"
+                )
+            )
         )
     }
 
     override fun onCleared() {
         super.onCleared()
-        compositeDisposable.clear()
+        viewModelCoroutineScope.cancel()
     }
 }
 
