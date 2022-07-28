@@ -5,39 +5,71 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView.OnEditorActionListener
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.geekbrains.tests.R
+import com.geekbrains.tests.model.SearchResponse
 import com.geekbrains.tests.model.SearchResult
 import com.geekbrains.tests.presenter.RepositoryContract
-import com.geekbrains.tests.presenter.search.PresenterSearchContract
-import com.geekbrains.tests.presenter.search.SearchPresenter
 import com.geekbrains.tests.repository.GitHubApi
 import com.geekbrains.tests.repository.GitHubRepository
+import com.geekbrains.tests.utils.MainSchedulersProvider
 import com.geekbrains.tests.view.details.DetailsActivity
+import com.geekbrains.tests.viewmodels.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 class MainActivity : AppCompatActivity(), ViewSearchContract {
 
     private val adapter = SearchResultAdapter()
-    private val presenter: PresenterSearchContract = SearchPresenter(createRepository())
-    private var totalCount: Int = 0
+    private val factory = SearchScreenViewModelFactory(
+        createRepository(),
+        Dispatchers.IO
+    )
 
-    override fun onResume() {
-        super.onResume()
-        presenter.onAttach(this@MainActivity)
-    }
+    private lateinit var viewModel: SearchScreenViewModel
+    private var totalCount: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setUI()
+
+        viewModel = ViewModelProvider(this@MainActivity, factory)[SearchScreenViewModel::class.java]
+        subscribeToLiveData()
     }
 
-    override fun onPause() {
-        super.onPause()
-        presenter.onDetach()
+    private fun subscribeToLiveData() {
+        viewModel.subscribeLiveData().observe(this@MainActivity) {
+            displaySearchResults(it)
+        }
+    }
+
+    private fun displaySearchResults(response: AppState) {
+        when (response) {
+
+            is SuccessState<*> -> {
+                displayLoading(false)
+
+                val data = response as SuccessState<SearchResponse>
+                val searchResults = data.value.searchResults!!
+                val totalCount = data.value.totalCount!!
+
+                displaySearchResults(searchResults, totalCount)
+            }
+
+            is LoadingState -> {
+                displayLoading(true)
+            }
+
+            is ErrorState -> {
+                displayLoading(false)
+                displayError(response.error.message.toString())
+            }
+        }
     }
 
     private fun setUI() {
@@ -62,7 +94,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = searchEditText.text.toString()
                 if (query.isNotBlank()) {
-                    presenter.searchGitHub(query)
+                    viewModel.searchGitHub(query)
                     return@OnEditorActionListener true
                 } else {
                     displayError(getString(R.string.enter_search_word))
@@ -127,7 +159,7 @@ class MainActivity : AppCompatActivity(), ViewSearchContract {
     private fun setSearchButtonQueryListener() {
         val query = searchEditText.text.toString()
         if (query.isNotBlank()) {
-            presenter.searchGitHub(query)
+            viewModel.searchGitHub(query)
         } else {
             displayError(getString(R.string.enter_search_word))
         }
